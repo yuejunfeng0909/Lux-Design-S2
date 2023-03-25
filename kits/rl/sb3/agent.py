@@ -26,19 +26,26 @@ class Agent:
         np.random.seed(0)
         self.env_cfg: EnvConfig = env_cfg
 
+        # load the PPO model
         directory = osp.dirname(__file__)
         self.policy = PPO.load(osp.join(directory, MODEL_WEIGHTS_RELATIVE_PATH))
+
+        # TODO load other models here
+        # maybe use a decision tree for bidding, that updates based on the result of the game
 
         self.controller = SimpleUnitDiscreteController(self.env_cfg)
 
     def bid_policy(self, step: int, obs, remainingOverageTime: int = 60):
-        # the policy here is the same one used in the RL tutorial: https://www.kaggle.com/code/stonet2000/rl-with-lux-2-rl-problem-solving
+        # TODO change to a decision tree?
         return dict(faction="AlphaStrike", bid=0)
 
     def factory_placement_policy(self, step: int, obs, remainingOverageTime: int = 60):
-        # the policy here is the same one used in the RL tutorial: https://www.kaggle.com/code/stonet2000/rl-with-lux-2-rl-problem-solving
+        
+        # give up if no metal
         if obs["teams"][self.player]["metal"] == 0:
             return dict()
+        
+        # 
         potential_spawns = list(zip(*np.where(obs["board"]["valid_spawns_mask"] == 1)))
         potential_spawns_set = set(potential_spawns)
         done_search = False
@@ -104,12 +111,12 @@ class Agent:
             self.player, raw_obs, actions[0]
         )
 
-        # commented code below adds watering lichen which can easily improve your agent
-        # shared_obs = raw_obs[self.player]
-        # factories = shared_obs["factories"][self.player]
-        # for unit_id in factories.keys():
-        #     factory = factories[unit_id]
-        #     if 1000 - step < 50 and factory["cargo"]["water"] > 100:
-        #         lux_action[unit_id] = 2 # water and grow lichen at the very end of the game
+        # adds watering lichen which can easily improve your agent
+        shared_obs = raw_obs[self.player]
+        factories = shared_obs["factories"][self.player]
+        for unit_id in factories.keys():
+            factory = factories[unit_id]
+            if 1000 - step < 50 and factory["cargo"]["water"] > 100:
+                lux_action[unit_id] = 2 # water and grow lichen at the very end of the game
 
         return lux_action

@@ -30,6 +30,8 @@ def agent_fn(observation, configurations):
 
     player = observation.player
     remainingOverageTime = observation.remainingOverageTime
+
+    # initialize agent
     if step == 0:
         env_cfg = EnvConfig.from_dict(configurations["env_cfg"])
         agent_dict[player] = Agent(player, env_cfg)

@@ -30,43 +30,60 @@ class Controller:
 class SimpleUnitDiscreteController(Controller):
     def __init__(self, env_cfg) -> None:
         """
-        A simple controller that controls only the robot that will get spawned.
-        Moreover, it will always try to spawn one heavy robot if there are none regardless of action given
-
-        For the robot unit
-        - 4 cardinal direction movement (4 dims)
-        - a move center no-op action (1 dim)
-        - transfer action just for transferring ice in 4 cardinal directions or center (5)
-        - pickup action for power (1 dims)
-        - dig action (1 dim)
-        - no op action (1 dim) - equivalent to not submitting an action queue which costs power
-
         It does not include
-        - self destruct action
-        - recharge action
+        - recharge action (automaticaly done when insufficient power for next action)
         - planning (via actions executing multiple times or repeating actions)
-        - factory actions
-        - transferring power or resources other than ice
 
         To help understand how to this controller works to map one action space to the original lux action space,
         see how the lux action space is defined in luxai_s2/spaces/action.py
 
         """
         self.env_cfg = env_cfg
-        self.move_act_dims = 4
-        self.transfer_act_dims = 5
-        self.pickup_act_dims = 1
-        self.dig_act_dims = 1
-        self.no_op_dims = 1
-
-        self.move_dim_high = self.move_act_dims
-        self.transfer_dim_high = self.move_dim_high + self.transfer_act_dims
-        self.pickup_dim_high = self.transfer_dim_high + self.pickup_act_dims
-        self.dig_dim_high = self.pickup_dim_high + self.dig_act_dims
-        self.no_op_dim_high = self.dig_dim_high + self.no_op_dims
-
-        self.total_act_dims = self.no_op_dim_high
-        action_space = spaces.Discrete(self.total_act_dims)
+        
+        # light robot
+        light_robot_action_space = spaces.Dict({
+            # action_type: move, transfer resource, pickup power, dig, self destruct, no op
+            "action_type": spaces.Discrete(6),
+            
+            # direction: center, up, right, down, left
+            "direction": spaces.Discrete(5),
+            
+            # resource_type: ice, ore, water, metal, power
+            "resource_type": spaces.Discrete(5),
+            
+            # percentage of resource to transfer
+            # TODO is there a better implementation?       
+            "resource_amount": spaces.Box(low=0, high=env_cfg.max),
+        })
+        
+        # heavy robot
+        heavy_robot_action_space = spaces.Dict({
+            # move, transfer resource, pickup power, dig, self destruct, no op
+            "action_type": spaces.Discrete(6),
+            
+            # center, up, right, down, left
+            "direction": spaces.Discrete(5),
+            
+            # ice, ore, water, metal, power
+            "resource_type": spaces.Discrete(5),
+            
+            # percentage of resource to transfer
+            # TODO is there a better implementation?       
+            "resource_amount": spaces.Box(low=0.0, high=1.0, shape=(1,), dtype=np.float32),     
+        })
+        
+        # factory
+        factory_action_space = spaces.Dict({
+            # build light robot, build heavy robot, water, no op
+            "action_type": spaces.Discrete(4),
+        })
+        
+        # assemble action space
+        action_space = spaces.Dict({
+            "light_robot": light_robot_action_space,
+            "heavy_robot": heavy_robot_action_space,
+            "factory": factory_action_space
+        })
         super().__init__(action_space)
 
     def _is_move_action(self, id):
@@ -102,7 +119,15 @@ class SimpleUnitDiscreteController(Controller):
         shared_obs = obs["player_0"]
         lux_action = dict()
         units = shared_obs["units"][agent]
+        
+        # for each unit, prepare a action queue
         for unit_id in units.keys():
+            
+            # TODO decide whether update action queue.
+            # maybe let the model decide whether to update the action queue or not?
+            
+            # TODO off-policy training
+            
             unit = units[unit_id]
             choice = action
             action_queue = []
@@ -142,6 +167,7 @@ class SimpleUnitDiscreteController(Controller):
         Defines a simplified action mask for this controller's action space
 
         Doesn't account for whether robot has enough power
+        TODO add power check
         """
 
         # compute a factory occupancy map that will be useful for checking if a board tile

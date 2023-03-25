@@ -10,7 +10,10 @@ class SimpleUnitObservationWrapper(gym.ObservationWrapper):
     """
     A simple state based observation to work with in pair with the SimpleUnitDiscreteController
 
-    It contains info only on the first robot, the first factory you own, and some useful features. If there are no owned robots the observation is just zero.
+    It contains info only on the first robot, the first factory you own, and some useful features. 
+    If there are no owned robots the observation is just zero.
+    
+    
     No information about the opponent is included. This will generate observations for all teams.
 
     Included features:
@@ -32,6 +35,7 @@ class SimpleUnitObservationWrapper(gym.ObservationWrapper):
     def convert_obs(obs: Dict[str, Any], env_cfg: Any) -> Dict[str, npt.NDArray]:
         observation = dict()
         shared_obs = obs["player_0"]
+        
         ice_map = shared_obs["board"]["ice"]
         ice_tile_locations = np.argwhere(ice_map == 1)
 

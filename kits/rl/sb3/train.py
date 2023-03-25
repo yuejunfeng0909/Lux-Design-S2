@@ -76,6 +76,11 @@ class CustomEnvWrapper(gym.Wrapper):
         # we can save the metrics to info so we can use tensorboard to log them to get a glimpse into how our agent is behaving
         info["metrics"] = metrics
 
+
+        # TODO improve reward function to add:
+        # reward for lichen growth
+        # etc...
+        # TODO automatic reward function generation if possible
         reward = 0
         if self.prev_step_metrics is not None:
             # we check how much ice and water is produced and reward the agent for generating both
