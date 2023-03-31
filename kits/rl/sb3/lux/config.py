@@ -45,7 +45,7 @@ class EnvConfig:
 
     ### Constants ###
     # you can only ever transfer in/out 1000 as this is the max cargo space.
-    max_transfer_amount: int = 10000
+    max_transfer_amount: int = 1000
     MIN_FACTORIES: int = 2
     MAX_FACTORIES: int = 5
     CYCLE_LENGTH: int = 50
