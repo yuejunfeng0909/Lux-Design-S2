@@ -112,11 +112,11 @@ class Agent:
         )
 
         # adds watering lichen which can easily improve your agent
-        shared_obs = raw_obs[self.player]
-        factories = shared_obs["factories"][self.player]
-        for unit_id in factories.keys():
-            factory = factories[unit_id]
-            if 1000 - step < 50 and factory["cargo"]["water"] > 100:
-                lux_action[unit_id] = 2 # water and grow lichen at the very end of the game
+        # shared_obs = raw_obs[self.player]
+        # factories = shared_obs["factories"][self.player]
+        # for unit_id in factories.keys():
+        #     factory = factories[unit_id]
+        #     if 1000 - step < 50 and factory["cargo"]["water"] > 100:
+        #         lux_action[unit_id] = 2 # water and grow lichen at the very end of the game
 
         return lux_action

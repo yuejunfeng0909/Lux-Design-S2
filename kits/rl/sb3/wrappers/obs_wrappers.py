@@ -36,6 +36,22 @@ class SimpleUnitObservationWrapper(gym.ObservationWrapper):
         observation = dict()
         shared_obs = obs["player_0"]
         
+        '''
+        Features to obtain:
+        1. Maps
+            1. Ice
+            2. Ores
+            3. Water
+            4. Metal
+            5. Our Units (one hot encoding of unit type)
+            6. Enemy Units (one hot)
+            7. Current unit position
+        2. Hand craft features
+            1. Distance to closest ice tile
+            2. Distance to closest ore
+            3. 
+        '''
+        
         ice_map = shared_obs["board"]["ice"]
         ice_tile_locations = np.argwhere(ice_map == 1)
 

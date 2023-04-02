@@ -27,7 +27,7 @@ class Controller:
         raise NotImplementedError()
 
 
-class SimpleUnitDiscreteController(Controller):
+class FactoryDiscreteController(Controller):
     def __init__(self, env_cfg) -> None:
         """
         It does not include
@@ -40,52 +40,11 @@ class SimpleUnitDiscreteController(Controller):
         """
         self.env_cfg = env_cfg
         
-        # Define action space
-        
-        # light robot
-        light_robot_action_space = spaces.Dict({           
-            
-            # action_type: move, transfer resource, pickup power, dig, self destruct, no op
-            "action_type": spaces.Discrete(6),
-            
-            # direction: center, up, right, down, left
-            "direction": spaces.Discrete(5),
-            
-            # resource_type: ice, ore, water, metal, power
-            "resource_type": spaces.Discrete(5),
-            
-            # TODO implement variable resource amount
-            # "resource_amount": spaces.Box(low=0, high=env_cfg.max),
-            
-        })
-        
-        # heavy robot
-        heavy_robot_action_space = spaces.Dict({
-            # move, transfer resource, pickup power, dig, self destruct, no op
-            "action_type": spaces.Discrete(6),
-            
-            # center, up, right, down, left
-            "direction": spaces.Discrete(5),
-            
-            # ice, ore, water, metal, power
-            "resource_type": spaces.Discrete(5),
-            
-            # TODO implement variable resource amount
-            # "resource_amount": spaces.Box(low=0, high=env_cfg.max),
-        })
-        
-        # factory
-        factory_action_space = spaces.Dict({
+        action_space = spaces.Dict({
             # build light robot, build heavy robot, water, no op
             "action_type": spaces.Discrete(4),
         })
         
-        # assemble action space
-        action_space = spaces.Dict({
-            "light_robot": light_robot_action_space,
-            "heavy_robot": heavy_robot_action_space,
-            "factory": factory_action_space
-        })
         super().__init__(action_space)
     
     def _get_robot_action(self, action):

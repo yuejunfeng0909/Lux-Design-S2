@@ -27,7 +27,7 @@ class Controller:
         raise NotImplementedError()
 
 
-class SimpleUnitDiscreteController(Controller):
+class RobotController(Controller):
     def __init__(self, env_cfg) -> None:
         """
         It does not include
@@ -42,8 +42,7 @@ class SimpleUnitDiscreteController(Controller):
         
         # Define action space
         
-        # light robot
-        light_robot_action_space = spaces.Dict({           
+        action_space = spaces.Dict({           
             
             # action_type: move, transfer resource, pickup power, dig, self destruct, no op
             "action_type": spaces.Discrete(6),
@@ -59,33 +58,6 @@ class SimpleUnitDiscreteController(Controller):
             
         })
         
-        # heavy robot
-        heavy_robot_action_space = spaces.Dict({
-            # move, transfer resource, pickup power, dig, self destruct, no op
-            "action_type": spaces.Discrete(6),
-            
-            # center, up, right, down, left
-            "direction": spaces.Discrete(5),
-            
-            # ice, ore, water, metal, power
-            "resource_type": spaces.Discrete(5),
-            
-            # TODO implement variable resource amount
-            # "resource_amount": spaces.Box(low=0, high=env_cfg.max),
-        })
-        
-        # factory
-        factory_action_space = spaces.Dict({
-            # build light robot, build heavy robot, water, no op
-            "action_type": spaces.Discrete(4),
-        })
-        
-        # assemble action space
-        action_space = spaces.Dict({
-            "light_robot": light_robot_action_space,
-            "heavy_robot": heavy_robot_action_space,
-            "factory": factory_action_space
-        })
         super().__init__(action_space)
     
     def _get_robot_action(self, action):
@@ -99,9 +71,9 @@ class SimpleUnitDiscreteController(Controller):
         return np.array([action_type,
                          action["direction"],
                          action["resource_type"],
-                         self.env_cfg.max_transfer_amount,  # TODO implement variable resource amount
+                         100,                       # TODO implement variable resource amount
                          action["self_destruct"],
-                         1])                                # TODO set repeat
+                         1])                        # TODO set repeat
 
     def action_to_lux_action(
         self, agent: str, obs: Dict[str, Any], action: npt.NDArray
@@ -110,13 +82,15 @@ class SimpleUnitDiscreteController(Controller):
         lux_action = dict()
         units = shared_obs["units"][agent]
         
+        '''
+        1. given current observation, get one action for each unit
+        2. forward simulation using the actions, update observation
+        3. compress same action into one action with repeat
+        4. repeat 1 and 2 until action queue is full for any robot TODO or some other stopping condition
+        '''
+        
         # for each unit, prepare a action queue
         for unit_id in units.keys():
-            
-            # TODO decide whether update action queue.
-            # maybe let the model decide whether to update the action queue or not?
-            
-            # TODO off-policy training
             
             unit = units[unit_id]
             choice = action

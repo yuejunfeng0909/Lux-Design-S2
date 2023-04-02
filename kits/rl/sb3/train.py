@@ -2,7 +2,6 @@
 Implementation of RL agent. Note that luxai_s2 and stable_baselines3 are packages not available during the competition running (ATM)
 """
 
-
 import copy
 import os.path as osp
 
@@ -32,8 +31,7 @@ from stable_baselines3.ppo import PPO
 
 from wrappers import SimpleUnitDiscreteController, SimpleUnitObservationWrapper
 
-
-class CustomEnvWrapper(gym.Wrapper):
+class MakeSingleAgentEnvWrapper(gym.Wrapper):
     def __init__(self, env: gym.Env) -> None:
         """
         Adds a custom reward and turns the LuxAI_S2 environment into a single-agent environment for easy training
@@ -157,19 +155,28 @@ def make_env(env_id: str, rank: int, seed: int = 0, max_episode_steps=100):
         # this will remove the bidding phase and factory placement phase. For factory placement we use
         # the provided place_near_random_ice function which will randomly select an ice tile and place a factory near it.
 
+        # make bidding and factory placement into the env.reset() step
         env = SB3Wrapper(
             env,
             factory_placement_policy=place_near_random_ice,
             controller=SimpleUnitDiscreteController(env.env_cfg),
         )
+        
+        # Construct features
         env = SimpleUnitObservationWrapper(
             env
         )  # changes observation to include a few simple features
-        env = CustomEnvWrapper(env)  # convert to single agent, add our reward
+        
+        # Make environment single agent (remove other agent)
+        env = MakeSingleAgentEnvWrapper(env)
+        
+        # add time limit to make training faster
         env = TimeLimit(
             env, max_episode_steps=max_episode_steps
-        )  # set horizon to 100 to make training faster. Default is 1000
-        env = Monitor(env)  # for SB3 to allow it to record metrics
+        )
+        
+        # for SB3 to allow it to record metrics
+        env = Monitor(env)  
         env.reset(seed=seed + rank)
         set_random_seed(seed)
         return env
